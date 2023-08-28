@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM MVP</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+    <section id="user-section">
+        <h2>Create User</h2>
+        <form id="user-form">
+            <!-- Form fields for Name, Photo, Cell, Username, Email, Address, Notes, Meetings -->
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="photo">Photo:</label>
+            <input type="file" id="photo" name="photo">
+
+            <label for="cell">Cell:</label>
+            <input type="tel" id="cell" name="cell" required>
+
+            <button type="submit">Create User</button>
+        </form>
+    </section>
+
+    <section id="create-meeting">
+        <h2>Create Meeting</h2>
+        <form id="meeting-form">
+            <!-- Fields for Picking User, date, and time -->
+            <label for="user">User:</label>
+            <select id="user" name="user" required>
+                <option value="">Select a user</option>
+                <!-- Populate options dynamically using JavaScript while typing-->
+            </select>
+
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+
+            <label for="time">Time:</label>
+            <input type="time" id="time" name="time" required>
+
+            <button type="submit">Create Meeting</button>
+        </form>
+    </section>
+
+    <section id="user-db">
+        <h2>User Database</h2>
+        <ul id="user-list"></ul>
+    </section>
+
+    <section id="meeting-calendar">
+        <h2>Meeting Calendar</h2>
+        <div id="calendar"></div>
+    </section>
+    <script src="path/to/jquery.js"></script>
+    <script src="path/to/bootstrap.js"></script>
+    <script src="path/to/script.js"></script>
+    <script src="path/to/main.js"></script>
+</body>
+</html>
