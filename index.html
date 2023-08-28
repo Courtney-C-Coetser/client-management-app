@@ -159,12 +159,13 @@
         function editUser(index) {
             const users = JSON.parse(localStorage.getItem("users")) || [];
             const user = users[index];
+
             nameInput.value = user.name;
             ageInput.value = user.age;
             cellInput.value = user.cell;
-            users.splice(index, 1);
-            localStorage.setItem("users", JSON.stringify(users));
-            updateDisplay();
+
+            // Save the index of the user being edited to a data attribute
+            userForm.setAttribute("data-edit-index", index);
         }
 
         function deleteUser(index) {
@@ -179,19 +180,36 @@
             const name = nameInput.value;
             const age = ageInput.value;
             const cell = cellInput.value;
-            const photoFile = photoInput.files[0];
-            if (photoFile) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const photoUrl = event.target.result;
-                    createUser(name, age, cell, photoUrl);
-                    clearForm();
-                };
-                reader.readAsDataURL(photoFile);
+            const editIndex = userForm.getAttribute("data-edit-index");
+
+            if (editIndex !== null) {
+                // If data-edit-index exists, edit the existing user
+                const users = JSON.parse(localStorage.getItem("users")) || [];
+                const user = users[editIndex];
+                user.name = name;
+                user.age = age;
+                user.cell = cell;
+                localStorage.setItem("users", JSON.stringify(users));
+                userForm.removeAttribute("data-edit-index");
             } else {
-                createUser(name, age, cell, null); // No photo provided
-                clearForm();
+                // Otherwise, create a new user
+                const photoFile = photoInput.files[0];
+                if (photoFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const photoUrl = event.target.result;
+                        createUser(name, age, cell, photoUrl);
+                        clearForm();
+                    };
+                    reader.readAsDataURL(photoFile);
+                } else {
+                    createUser(name, age, cell, null); // No photo provided
+                    clearForm();
+                }
             }
+            
+            updateDisplay();
+            clearForm();
         });
 
         updateDisplay();
