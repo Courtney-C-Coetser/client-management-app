@@ -1,61 +1,207 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM MVP</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to your CSS file -->
+    <title>CRM Application</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Additional custom styles here */
+        .user-info {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 400px;
+            height: 300px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            overflow: auto;
+        }
+        .user-info-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+        .user-photo {
+            max-width: 50px;
+        }
+    </style>
 </head>
 <body>
-    <section id="user-section">
-        <h2>Create User</h2>
-        <form id="user-form">
-            <!-- Form fields for Name, Photo, Cell, Username, Email, Address, Notes, Meetings -->
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="photo">Photo:</label>
-            <input type="file" id="photo" name="photo">
-
-            <label for="cell">Cell:</label>
-            <input type="tel" id="cell" name="cell" required>
-
-            <button type="submit">Create User</button>
+    <div class="container mt-4">
+        <h1>User Creation Section</h1>
+        <form id="userForm" class="mb-4">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="age">Age:</label>
+                <input type="number" id="age" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="cell">Cell:</label>
+                <input type="text" id="cell" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="photo">Photo:</label>
+                <input type="file" id="photo" class="form-control-file">
+            </div>
+            <button type="submit" class="btn btn-primary">Create User</button>
         </form>
-    </section>
-
-    <section id="create-meeting">
-        <h2>Create Meeting</h2>
-        <form id="meeting-form">
-            <!-- Fields for Picking User, date, and time -->
-            <label for="user">User:</label>
-            <select id="user" name="user" required>
-                <option value="">Select a user</option>
-                <!-- Populate options dynamically using JavaScript while typing-->
-            </select>
-
-            <label for="date">Date:</label>
-            <input type="date" id="date" name="date" required>
-
-            <label for="time">Time:</label>
-            <input type="time" id="time" name="time" required>
-
-            <button type="submit">Create Meeting</button>
-        </form>
-    </section>
-
-    <section id="user-db">
+        
         <h2>User Database</h2>
-        <ul id="user-list"></ul>
-    </section>
+        <table id="userTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Cell</th>
+                    <th>Photo</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="userList">
+                <!-- User data will be added here dynamically -->
+            </tbody>
+        </table>
+    
+        <div id="userInfoPopup" class="user-info">
+            <span class="user-info-close" onclick="hideUserInfo()">X</span>
+            <h3 id="popupUserName"></h3>
+            <p id="popupUserAge"></p>
+            <p id="popupUserCell"></p>
+            <div id="popupUserPhotos"></div>
+        </div>
+    </div>
 
-    <section id="meeting-calendar">
-        <h2>Meeting Calendar</h2>
-        <div id="calendar"></div>
-    </section>
-    <script src="path/to/jquery.js"></script>
-    <script src="path/to/bootstrap.js"></script>
-    <script src="path/to/script.js"></script>
-    <script src="path/to/main.js"></script>
+    <script>
+        const userForm = document.getElementById("userForm");
+        const nameInput = document.getElementById("name");
+        const ageInput = document.getElementById("age");
+        const cellInput = document.getElementById("cell");
+        const photoInput = document.getElementById("photo");
+        const userList = document.getElementById("userList");
+        const userInfoPopup = document.getElementById("userInfoPopup");
+        const popupUserName = document.getElementById("popupUserName");
+        const popupUserAge = document.getElementById("popupUserAge");
+        const popupUserCell = document.getElementById("popupUserCell");
+        const popupUserPhotos = document.getElementById("popupUserPhotos");
+        
+        function createUser(name, age, cell, photos) {
+            const newUser = { name, age, cell, photos };
+            const users = JSON.parse(localStorage.getItem("users")) || [];
+            users.push(newUser);
+            localStorage.setItem("users", JSON.stringify(users));
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            userList.innerHTML = "";
+            const users = JSON.parse(localStorage.getItem("users")) || [];
+            users.forEach((user, index) => {
+                const row = document.createElement("tr");
+                const photosHtml = user.photos
+                    ? `<img src="${user.photos[0]}" alt="User Photo" class="user-photo">`
+                    : '<span>No Photo</span>';
+                row.innerHTML = `
+                    <td><a href="#" onclick="handleUserNameClick(${index})">${user.name}</a></td>
+                    <td>${user.age}</td>
+                    <td>${user.cell}</td>
+                    <td>${photosHtml}</td>
+                    <td><button class="btn btn-info" onclick="editUser(${index})">Edit</button></td>
+                    <td><button class="btn btn-danger" onclick="deleteUser(${index})">Delete</button></td>
+                `;
+                userList.appendChild(row);
+            });
+        }
+        
+        function clearForm() {
+            nameInput.value = "";
+            ageInput.value = "";
+            cellInput.value = "";
+            photoInput.value = "";
+        }
+
+        function showUserInfo(user) {
+            popupUserName.textContent = user.name;
+            popupUserAge.textContent = `Age: ${user.age}`;
+            popupUserCell.textContent = `Cell: ${user.cell}`;
+            
+            popupUserPhotos.innerHTML = "";
+            if (user.photos) {
+                user.photos.forEach(photo => {
+                    const img = document.createElement("img");
+                    img.src = photo;
+                    img.alt = "User Photo";
+                    img.classList.add("user-photo");
+                    popupUserPhotos.appendChild(img);
+                });
+            } else {
+                const placeholder = document.createElement("span");
+                placeholder.textContent = "No Photos Available";
+                popupUserPhotos.appendChild(placeholder);
+            }
+            
+            userInfoPopup.style.display = "block";
+        }
+
+        function hideUserInfo() {
+            userInfoPopup.style.display = "none";
+        }
+
+        function handleUserNameClick(index) {
+            const users = JSON.parse(localStorage.getItem("users")) || [];
+            const user = users[index];
+            showUserInfo(user);
+        }
+
+        function editUser(index) {
+            const users = JSON.parse(localStorage.getItem("users")) || [];
+            const user = users[index];
+            nameInput.value = user.name;
+            ageInput.value = user.age;
+            cellInput.value = user.cell;
+            photoInput.value = "";
+            users.splice(index, 1);
+            localStorage.setItem("users", JSON.stringify(users));
+            updateDisplay();
+        }
+
+        function deleteUser(index) {
+            const users = JSON.parse(localStorage.getItem("users")) || [];
+            users.splice(index, 1);
+            localStorage.setItem("users", JSON.stringify(users));
+            updateDisplay();
+        }
+
+        userForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            const name = nameInput.value;
+            const age = ageInput.value;
+            const cell = cellInput.value;
+            const photo = photoInput.files[0];
+            const photos = [];
+            
+            if (photo) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    photos.push(event.target.result);
+                    createUser(name, age, cell, photos);
+                    clearForm();
+                };
+                reader.readAsDataURL(photo);
+            } else {
+                createUser(name, age, cell, photos);
+                clearForm();
+            }
+        });
+
+        updateDisplay();
+    </script>
 </body>
 </html>
