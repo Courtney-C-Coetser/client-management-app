@@ -15,9 +15,7 @@
             border: 1px solid #ccc;
             padding: 20px;
             width: 400px;
-            height: 300px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            overflow: auto;
         }
         .user-info-close {
             position: absolute;
@@ -25,8 +23,11 @@
             right: 10px;
             cursor: pointer;
         }
-        .user-photo {
-            max-width: 50px;
+        .user-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 50%;
         }
     </style>
 </head>
@@ -72,10 +73,10 @@
     
         <div id="userInfoPopup" class="user-info">
             <span class="user-info-close" onclick="hideUserInfo()">X</span>
-            <h3 id="popupUserName"></h3>
-            <p id="popupUserAge"></p>
-            <p id="popupUserCell"></p>
-            <div id="popupUserPhotos"></div>
+            <div id="userGallery" class="text-center"></div>
+            <h3 id="userInfoName"></h3>
+            <p><strong>Age:</strong> <span id="userInfoAge"></span></p>
+            <p><strong>Cell:</strong> <span id="userInfoCell"></span></p>
         </div>
     </div>
 
@@ -87,13 +88,13 @@
         const photoInput = document.getElementById("photo");
         const userList = document.getElementById("userList");
         const userInfoPopup = document.getElementById("userInfoPopup");
-        const popupUserName = document.getElementById("popupUserName");
-        const popupUserAge = document.getElementById("popupUserAge");
-        const popupUserCell = document.getElementById("popupUserCell");
-        const popupUserPhotos = document.getElementById("popupUserPhotos");
+        const userGallery = document.getElementById("userGallery");
+        const userInfoName = document.getElementById("userInfoName");
+        const userInfoAge = document.getElementById("userInfoAge");
+        const userInfoCell = document.getElementById("userInfoCell");
         
-        function createUser(name, age, cell, photos) {
-            const newUser = { name, age, cell, photos };
+        function createUser(name, age, cell, photoUrl) {
+            const newUser = { name, age, cell, photoUrl };
             const users = JSON.parse(localStorage.getItem("users")) || [];
             users.push(newUser);
             localStorage.setItem("users", JSON.stringify(users));
@@ -103,16 +104,14 @@
         function updateDisplay() {
             userList.innerHTML = "";
             const users = JSON.parse(localStorage.getItem("users")) || [];
+            users.sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
             users.forEach((user, index) => {
                 const row = document.createElement("tr");
-                const photosHtml = user.photos
-                    ? `<img src="${user.photos[0]}" alt="User Photo" class="user-photo">`
-                    : '<span>No Photo</span>';
                 row.innerHTML = `
                     <td><a href="#" onclick="handleUserNameClick(${index})">${user.name}</a></td>
                     <td>${user.age}</td>
                     <td>${user.cell}</td>
-                    <td>${photosHtml}</td>
+                    <td><img class="user-thumbnail" src="${user.photoUrl || 'placeholder.jpg'}" alt=""></td>
                     <td><button class="btn btn-info" onclick="editUser(${index})">Edit</button></td>
                     <td><button class="btn btn-danger" onclick="deleteUser(${index})">Delete</button></td>
                 `;
@@ -128,25 +127,22 @@
         }
 
         function showUserInfo(user) {
-            popupUserName.textContent = user.name;
-            popupUserAge.textContent = `Age: ${user.age}`;
-            popupUserCell.textContent = `Cell: ${user.cell}`;
-            
-            popupUserPhotos.innerHTML = "";
-            if (user.photos) {
-                user.photos.forEach(photo => {
-                    const img = document.createElement("img");
-                    img.src = photo;
-                    img.alt = "User Photo";
-                    img.classList.add("user-photo");
-                    popupUserPhotos.appendChild(img);
-                });
-            } else {
-                const placeholder = document.createElement("span");
-                placeholder.textContent = "No Photos Available";
-                popupUserPhotos.appendChild(placeholder);
-            }
-            
+            userInfoName.textContent = user.name;
+            userInfoAge.textContent = user.age;
+            userInfoCell.textContent = user.cell;
+
+            userGallery.innerHTML = `
+                <img src="${user.photoUrl || 'placeholder.jpg'}" alt="${user.name}'s Photo" class="img-fluid">
+                <div class="mt-3">
+                    <strong>Photo Gallery</strong>
+                    <div class="d-flex justify-content-center mt-2">
+                        <img src="${user.photoUrl || 'placeholder.jpg'}" alt="${user.name}'s Photo" class="user-thumbnail">
+                        <img src="${user.photoUrl || 'placeholder.jpg'}" alt="${user.name}'s Photo" class="user-thumbnail">
+                        <img src="${user.photoUrl || 'placeholder.jpg'}" alt="${user.name}'s Photo" class="user-thumbnail">
+                    </div>
+                </div>
+            `;
+
             userInfoPopup.style.display = "block";
         }
 
@@ -166,7 +162,6 @@
             nameInput.value = user.name;
             ageInput.value = user.age;
             cellInput.value = user.cell;
-            photoInput.value = "";
             users.splice(index, 1);
             localStorage.setItem("users", JSON.stringify(users));
             updateDisplay();
@@ -184,19 +179,17 @@
             const name = nameInput.value;
             const age = ageInput.value;
             const cell = cellInput.value;
-            const photo = photoInput.files[0];
-            const photos = [];
-            
-            if (photo) {
+            const photoFile = photoInput.files[0];
+            if (photoFile) {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    photos.push(event.target.result);
-                    createUser(name, age, cell, photos);
+                    const photoUrl = event.target.result;
+                    createUser(name, age, cell, photoUrl);
                     clearForm();
                 };
-                reader.readAsDataURL(photo);
+                reader.readAsDataURL(photoFile);
             } else {
-                createUser(name, age, cell, photos);
+                createUser(name, age, cell, null); // No photo provided
                 clearForm();
             }
         });
